@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { useAppGuard } from "@/lib/useAppGuard";
 import { Screen, BottomNav } from "@/components/ui";
@@ -105,7 +106,7 @@ function NotificationCard() {
     const res = await subscribeToPush();
     setLoading(false);
     setPermission(getNotificationPermission());
-    setMessage(res.ok ? "알림이 켜졌어요. 매일 07:00 · 22:00에 리마인드를 보내드려요." : res.error ?? "실패했어요.");
+    setMessage(res.ok ? "알림이 켜졌어요. '시간 설정'에서 원하는 시각으로 바꿀 수 있어요." : res.error ?? "실패했어요.");
   }
 
   async function handleTest() {
@@ -133,22 +134,38 @@ function NotificationCard() {
         {permission === "unsupported" ? (
           <span style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>미지원 브라우저</span>
         ) : enabled ? (
-          <button
-            onClick={handleTest}
-            disabled={loading}
-            style={{
-              fontSize: 12,
-              fontWeight: 500,
-              color: "var(--color-brand-text)",
-              border: "1px solid var(--color-brand-border)",
-              borderRadius: 14,
-              padding: "5px 12px",
-              background: "none",
-              cursor: "pointer",
-            }}
-          >
-            테스트 발송
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link
+              href="/settings/notifications"
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: "var(--color-ink-soft)",
+                border: "1px solid var(--color-line)",
+                borderRadius: 14,
+                padding: "5px 12px",
+                textDecoration: "none",
+              }}
+            >
+              시간 설정
+            </Link>
+            <button
+              onClick={handleTest}
+              disabled={loading}
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: "var(--color-brand-text)",
+                border: "1px solid var(--color-brand-border)",
+                borderRadius: 14,
+                padding: "5px 12px",
+                background: "none",
+                cursor: "pointer",
+              }}
+            >
+              테스트 발송
+            </button>
+          </div>
         ) : (
           <button
             onClick={handleEnable}

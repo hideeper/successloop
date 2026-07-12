@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RoadmapData, SmartGoal, DailyEntry } from "../types";
+import type { RoadmapData, SmartGoal, DailyEntry, ReminderSettings } from "../types";
 
 type ListField = "dislikes" | "likes" | "realizations";
 
@@ -174,4 +174,30 @@ export async function markStage1Complete(db: SupabaseClient, userId: string) {
 
 export async function savePinHash(db: SupabaseClient, userId: string, pinHash: string) {
   await db.from("profiles").update({ pin_hash: pinHash }).eq("user_id", userId);
+}
+
+const DEFAULT_REMINDER: ReminderSettings = { morningAt: "07:00", nightAt: "22:00" };
+
+export async function loadReminderSettings(db: SupabaseClient, userId: string): Promise<ReminderSettings> {
+  const { data } = await db
+    .from("reminder_settings")
+    .select("morning_at, night_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!data) return DEFAULT_REMINDER;
+  return {
+    morningAt: (data.morning_at as string | null)?.slice(0, 5) ?? null,
+    nightAt: (data.night_at as string | null)?.slice(0, 5) ?? null,
+  };
+}
+
+export async function saveReminderSettings(
+  db: SupabaseClient,
+  userId: string,
+  patch: Partial<ReminderSettings>,
+) {
+  const row: Record<string, unknown> = { user_id: userId };
+  if (patch.morningAt !== undefined) row.morning_at = patch.morningAt;
+  if (patch.nightAt !== undefined) row.night_at = patch.nightAt;
+  await db.from("reminder_settings").upsert(row, { onConflict: "user_id" });
 }

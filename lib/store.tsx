@@ -15,16 +15,20 @@ import {
   loadCompletedDates,
   loadLatestDaily,
   loadProfile,
+  loadReminderSettings,
   loadRoadmap,
   markStage1Complete,
   saveCompass,
   saveDailyEntry,
   saveListField,
   savePinHash,
+  saveReminderSettings,
   startNewVersion,
 } from "./supabase/data";
 import { hashPin } from "./pin";
-import type { AuthUser, RoadmapData, DailyEntry } from "./types";
+import type { AuthUser, RoadmapData, DailyEntry, ReminderSettings } from "./types";
+
+const defaultReminder: ReminderSettings = { morningAt: "07:00", nightAt: "22:00" };
 
 const emptyRoadmap: RoadmapData = {
   dislikes: [],
@@ -51,6 +55,7 @@ interface Store {
   daily: DailyEntry | null;
   completedDates: string[];
   hasPin: boolean;
+  reminderSettings: ReminderSettings;
   signUp: (email: string, password: string, marketingOptIn: boolean) => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -60,6 +65,7 @@ interface Store {
   saveDaily: (entry: DailyEntry) => Promise<void>;
   setPin: (pin: string) => Promise<void>;
   verifyPin: (candidate: string) => Promise<boolean>;
+  setReminderSettings: (patch: Partial<ReminderSettings>) => Promise<void>;
   unlock: () => void;
 }
 
@@ -81,6 +87,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [daily, setDaily] = useState<DailyEntry | null>(null);
   const [completedDates, setCompletedDates] = useState<string[]>([]);
   const [pinHash, setPinHash] = useState<string | null>(null);
+  const [reminderSettings, setReminderSettingsState] = useState<ReminderSettings>(defaultReminder);
   const versionIdRef = useRef<number | null>(null);
 
   // 실제 인증 세션 (Supabase Auth)
@@ -112,17 +119,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setDaily(null);
       setCompletedDates([]);
       setPinHash(null);
+      setReminderSettingsState(defaultReminder);
       setDataLoading(false);
       return;
     }
     let active = true;
     setDataLoading(true);
     (async () => {
-      const [profile, roadmapData, dailyEntry, dates] = await Promise.all([
+      const [profile, roadmapData, dailyEntry, dates, reminder] = await Promise.all([
         loadProfile(supabase, userId),
         loadRoadmap(supabase, userId),
         loadLatestDaily(supabase, userId),
         loadCompletedDates(supabase, userId),
+        loadReminderSettings(supabase, userId),
       ]);
       if (!active) return;
       setStage1Done(profile.stage1Done);
@@ -130,6 +139,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setRoadmapState(roadmapData);
       setDaily(dailyEntry);
       setCompletedDates(dates);
+      setReminderSettingsState(reminder);
       setDataLoading(false);
     })();
     return () => {
@@ -219,6 +229,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return hash === pinHash;
   }
 
+  async function setReminderSettings(patch: Partial<ReminderSettings>) {
+    if (!userId) return;
+    setReminderSettingsState((s) => ({ ...s, ...patch }));
+    await saveReminderSettings(supabase, userId, patch);
+  }
+
   const value: Store = {
     hydrated: !authLoading && !dataLoading,
     unlocked,
@@ -229,6 +245,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     daily,
     completedDates,
     hasPin: pinHash !== null,
+    reminderSettings,
     signUp,
     signIn,
     logout,
@@ -238,6 +255,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveDaily,
     setPin,
     verifyPin,
+    setReminderSettings,
     unlock: () => setUnlocked(true),
   };
 

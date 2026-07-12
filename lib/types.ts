@@ -24,3 +24,8 @@ export interface AuthUser {
   email: string;
   marketingOptIn: boolean;
 }
+
+export interface ReminderSettings {
+  morningAt: string | null; // "HH:MM" 또는 꺼짐(null)
+  nightAt: string | null;
+}
