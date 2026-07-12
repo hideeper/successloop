@@ -31,3 +31,8 @@ next-env.d.ts
 
 # 민감정보 스크린샷 (DB 비밀번호 등 노출) — 커밋 금지
 supabase 깃헙, rdb 등 정보.png
+26.07.12 database 변경.txt
+
+# 비밀번호·키가 담긴 메모 파일 전반 (범용 규칙)
+*비밀번호*.txt
+*password*.txt
