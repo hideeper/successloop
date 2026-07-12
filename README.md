@@ -50,3 +50,4 @@ npx vercel --prod --scope hideeper-s-projects
 - 구현 완료: 로그인/회원가입(이메일, 실제 Supabase Auth) · 1단계(설명카드+입력폼, 예시팝업) · 잠재의식 Daily on(SMART) · 오늘 허브(리마인드 배너) · 읽기 화면(아침/일상/밤) · PIN 설정·잠금(해시) · 목표 탭(열람/수정/새로작성, 버전보존) · 설정(로그아웃)
 - 데이터: Supabase Postgres + RLS 전면 적용, end-to-end 검증 완료
 - 미구현: 소셜 로그인(Google/Apple/Kakao 실제 OAuth) · 웹 푸시 알림 · 관리자 대시보드 · 문의하기/약관보기/데이터내보내기(스텁 상태) · GitHub 자동배포 연동
+
