@@ -29,3 +29,15 @@ export interface ReminderSettings {
   morningAt: string | null; // "HH:MM" 또는 꺼짐(null)
   nightAt: string | null;
 }
+
+export type InquiryType = "버그" | "제안" | "계정" | "기타";
+export type InquiryStatus = "received" | "in_progress" | "done";
+
+export interface Inquiry {
+  id: number;
+  type: InquiryType;
+  content: string;
+  status: InquiryStatus;
+  adminReply: string | null;
+  createdAt: string;
+}

@@ -49,6 +49,7 @@ interface Store {
   hydrated: boolean;
   unlocked: boolean;
   user: AuthUser | null;
+  userId: string | null;
   authError: string | null;
   roadmap: RoadmapData;
   stage1Done: boolean;
@@ -241,6 +242,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     hydrated: !authLoading && !dataLoading,
     unlocked,
     user,
+    userId,
     authError,
     roadmap,
     stage1Done,

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RoadmapData, SmartGoal, DailyEntry, ReminderSettings } from "../types";
+import type { RoadmapData, SmartGoal, DailyEntry, ReminderSettings, Inquiry, InquiryType } from "../types";
 
 type ListField = "dislikes" | "likes" | "realizations";
 
@@ -200,4 +200,31 @@ export async function saveReminderSettings(
   if (patch.morningAt !== undefined) row.morning_at = patch.morningAt;
   if (patch.nightAt !== undefined) row.night_at = patch.nightAt;
   await db.from("reminder_settings").upsert(row, { onConflict: "user_id" });
+}
+
+export async function createInquiry(
+  db: SupabaseClient,
+  userId: string,
+  type: InquiryType,
+  content: string,
+) {
+  const { error } = await db.from("inquiries").insert({ user_id: userId, type, content });
+  if (error) throw error;
+}
+
+export async function loadMyInquiries(db: SupabaseClient, userId: string): Promise<Inquiry[]> {
+  const { data } = await db
+    .from("inquiries")
+    .select("id, type, content, status, admin_reply, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  return (data ?? []).map((r) => ({
+    id: r.id as number,
+    type: r.type as InquiryType,
+    content: r.content as string,
+    status: r.status as Inquiry["status"],
+    adminReply: (r.admin_reply as string | null) ?? null,
+    createdAt: (r.created_at as string).slice(0, 10),
+  }));
 }

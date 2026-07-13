@@ -72,7 +72,7 @@ export default function SettingsPage() {
         <Card>
           <Row label="다크 모드" soon />
           <Row label="데이터 내보내기 (CSV·Excel)" soon />
-          <Row label="문의하기" soon />
+          <Row label="문의하기" href="/settings/inquiry" />
           <Row label="이용약관 · 개인정보 처리방침" soon last />
         </Card>
 

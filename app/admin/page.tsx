@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { replyToInquiry } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +23,18 @@ export default async function AdminPage() {
 
   const admin = createAdminClient();
 
-  const [{ data: authUsers }, { data: profiles }, { data: goalRows }, { data: pushRows }] = await Promise.all([
-    admin.auth.admin.listUsers({ perPage: 1000 }),
-    admin.from("profiles").select("user_id, role, onboarding_step, last_active_at, created_at"),
-    admin.from("short_term_goals").select("user_id"),
-    admin.from("push_subscriptions").select("user_id"),
-  ]);
+  const [{ data: authUsers }, { data: profiles }, { data: goalRows }, { data: pushRows }, { data: inquiryRows }] =
+    await Promise.all([
+      admin.auth.admin.listUsers({ perPage: 1000 }),
+      admin.from("profiles").select("user_id, role, onboarding_step, last_active_at, created_at"),
+      admin.from("short_term_goals").select("user_id"),
+      admin.from("push_subscriptions").select("user_id"),
+      admin
+        .from("inquiries")
+        .select("id, user_id, type, content, status, admin_reply, created_at")
+        .order("created_at", { ascending: false })
+        .limit(30),
+    ]);
 
   const allProfiles = profiles ?? [];
   const total = allProfiles.length;
@@ -57,6 +64,17 @@ export default async function AdminPage() {
   const maxDay = Math.max(1, ...days.map((d) => d.count));
 
   const emailMap = new Map((authUsers?.users ?? []).map((u) => [u.id, u.email ?? "-"]));
+
+  const inquiries = (inquiryRows ?? []).map((r) => ({
+    id: r.id as number,
+    email: emailMap.get(r.user_id as string) ?? "-",
+    type: r.type as string,
+    content: r.content as string,
+    status: r.status as string,
+    adminReply: (r.admin_reply as string | null) ?? null,
+    createdAt: (r.created_at as string).slice(0, 10),
+  }));
+  const unresolvedCount = inquiries.filter((iq) => iq.status !== "done").length;
 
   const recent = allProfiles
     .slice()
@@ -91,6 +109,7 @@ export default async function AdminPage() {
           <Stat label="1단계 완료율" value={total ? `${Math.round((stage1Done / total) * 100)}%` : "0%"} />
           <Stat label="Daily on 사용자" value={dailyOnUsers} />
           <Stat label="알림 구독자" value={pushUsers} />
+          <Stat label="미답변 문의" value={unresolvedCount} accent={unresolvedCount > 0} />
         </div>
 
         <Card title="최근 14일 가입 추이">
@@ -150,6 +169,83 @@ export default async function AdminPage() {
               </tbody>
             </table>
           </div>
+        </Card>
+
+        <Card title={`문의 내역 (미답변 ${unresolvedCount}건)`}>
+          {inquiries.length === 0 ? (
+            <div style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>아직 문의가 없습니다.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {inquiries.map((iq) => (
+                <div
+                  key={iq.id}
+                  style={{
+                    border: "1px solid var(--color-line)",
+                    borderRadius: 12,
+                    padding: 12,
+                    background: iq.status === "done" ? "var(--color-page)" : "var(--color-brand-soft)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, fontSize: 11 }}>
+                    <span
+                      style={{
+                        fontWeight: 500,
+                        color: "var(--color-brand-text)",
+                        background: "var(--color-surface)",
+                        borderRadius: 10,
+                        padding: "2px 8px",
+                      }}
+                    >
+                      {iq.type}
+                    </span>
+                    <span style={{ color: "var(--color-ink-muted)" }}>{iq.email}</span>
+                    <span style={{ color: "var(--color-ink-muted)", marginLeft: "auto" }}>{iq.createdAt}</span>
+                  </div>
+                  <div style={{ fontSize: 13, marginBottom: 10, lineHeight: 1.5 }}>{iq.content}</div>
+
+                  {iq.adminReply ? (
+                    <div style={{ fontSize: 12, color: "var(--color-ink-soft)", lineHeight: 1.5 }}>
+                      <span style={{ fontWeight: 500, color: "var(--color-brand-text)" }}>답변 완료: </span>
+                      {iq.adminReply}
+                    </div>
+                  ) : (
+                    <form action={replyToInquiry} style={{ display: "flex", gap: 8 }}>
+                      <input type="hidden" name="id" value={iq.id} />
+                      <textarea
+                        name="reply"
+                        placeholder="답변을 입력하세요"
+                        required
+                        style={{
+                          flex: 1,
+                          minHeight: 44,
+                          fontSize: 12,
+                          padding: 8,
+                          borderRadius: 8,
+                          border: "1px solid var(--color-line)",
+                          resize: "vertical",
+                        }}
+                      />
+                      <button
+                        type="submit"
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 500,
+                          color: "#fff",
+                          background: "var(--color-brand)",
+                          border: "none",
+                          borderRadius: 8,
+                          padding: "0 14px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        답변 저장
+                      </button>
+                    </form>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       </div>
     </div>
