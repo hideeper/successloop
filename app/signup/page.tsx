@@ -132,9 +132,14 @@ export default function SignupPage() {
           />
         </div>
 
-        <p style={{ fontSize: 12, color: "var(--color-ink-muted)", margin: "14px 4px 0" }}>
-          개인정보 처리방침 보기
-        </p>
+        <a
+          href="/settings/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: "block", fontSize: 12, color: "var(--color-ink-muted)", margin: "14px 4px 0" }}
+        >
+          이용약관 · 개인정보 처리방침 보기
+        </a>
 
         {error && (
           <p style={{ textAlign: "center", fontSize: 12, color: "#d14343", margin: "14px 4px 0" }}>{error}</p>

@@ -94,7 +94,7 @@ export default function SettingsPage() {
             disabled={exporting}
           />
           <Row label="문의하기" href="/settings/inquiry" />
-          <Row label="이용약관 · 개인정보 처리방침" soon last />
+          <Row label="이용약관 · 개인정보 처리방침" href="/settings/terms" last />
         </Card>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: "4px 4px 0" }}>
