@@ -1,3 +1,5 @@
+self.addEventListener("fetch", () => {});
+
 self.addEventListener("push", (event) => {
   let data = { title: "SuccessLoop", body: "알림이 도착했습니다.", url: "/today" };
   try {
