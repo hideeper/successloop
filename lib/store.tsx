@@ -11,6 +11,7 @@ import {
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "./supabase/client";
 import {
+  agreeToTerms as agreeToTermsRequest,
   ensureVersion,
   loadCompletedDates,
   loadLatestDaily,
@@ -66,9 +67,12 @@ interface Store {
   daily: DailyEntry | null;
   completedDates: string[];
   hasPin: boolean;
+  termsAgreed: boolean;
   reminderSettings: ReminderSettings;
   signUp: (email: string, password: string, marketingOptIn: boolean) => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<boolean>;
+  signInWithProvider: (provider: "google" | "kakao") => Promise<void>;
+  agreeToTerms: (marketingOptIn: boolean) => Promise<void>;
   logout: () => Promise<void>;
   setRoadmap: (patch: Partial<RoadmapData>) => Promise<void>;
   startNewRoadmap: () => Promise<void>;
@@ -98,6 +102,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [daily, setDaily] = useState<DailyEntry | null>(null);
   const [completedDates, setCompletedDates] = useState<string[]>([]);
   const [pinHash, setPinHash] = useState<string | null>(null);
+  const [termsAgreed, setTermsAgreed] = useState(false);
   const [reminderSettings, setReminderSettingsState] = useState<ReminderSettings>(defaultReminder);
   const versionIdRef = useRef<number | null>(null);
 
@@ -130,6 +135,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setDaily(null);
       setCompletedDates([]);
       setPinHash(null);
+      setTermsAgreed(false);
       setReminderSettingsState(defaultReminder);
       setDataLoading(false);
       return;
@@ -147,6 +153,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (!active) return;
       setStage1Done(profile.stage1Done);
       setPinHash(profile.pinHash);
+      setTermsAgreed(profile.termsAgreed);
       setRoadmapState(roadmapData);
       setDaily(dailyEntry);
       setCompletedDates(dates);
@@ -162,7 +169,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   async function signUp(email: string, password: string, marketingOptIn: boolean) {
     setAuthError(null);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { marketing_opt_in: marketingOptIn } },
@@ -170,6 +177,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (error) {
       setAuthError(error.message);
       return false;
+    }
+    // 이메일 가입은 자체 동의 화면을 이미 거쳤으므로 바로 동의 완료로 기록한다.
+    if (data.user) {
+      await agreeToTermsRequest(supabase, data.user.id, marketingOptIn);
+      setTermsAgreed(true);
     }
     return true;
   }
@@ -182,6 +194,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return false;
     }
     return true;
+  }
+
+  async function signInWithProvider(provider: "google" | "kakao") {
+    setAuthError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setAuthError(error.message);
+  }
+
+  // 소셜 로그인은 별도 동의 화면이 없으므로, 최초 로그인 시 /consent에서 한 번 동의를 받는다.
+  async function agreeToTerms(marketingOptIn: boolean) {
+    if (!userId) return;
+    await agreeToTermsRequest(supabase, userId, marketingOptIn);
+    setTermsAgreed(true);
   }
 
   async function logout() {
@@ -259,9 +287,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     daily,
     completedDates,
     hasPin: pinHash !== null,
+    termsAgreed,
     reminderSettings,
     signUp,
     signIn,
+    signInWithProvider,
+    agreeToTerms,
     logout,
     setRoadmap,
     startNewRoadmap,

@@ -21,7 +21,7 @@ const initialConsents: Consents = {
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signUp } = useStore();
+  const { signUp, signInWithProvider } = useStore();
   const [step, setStep] = useState<"info" | "consent">("info");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -91,6 +91,21 @@ export default function SignupPage() {
             <PrimaryButton onClick={() => setStep("consent")} disabled={!canGoConsent}>
               다음
             </PrimaryButton>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
+              <div style={{ flex: 1, height: 1, background: "var(--color-line)" }} />
+              <span style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>또는</span>
+              <div style={{ flex: 1, height: 1, background: "var(--color-line)" }} />
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button onClick={() => signInWithProvider("kakao")} style={social("#fee500", "#3c1e1e")}>
+                카카오로 계속하기
+              </button>
+              <button onClick={() => signInWithProvider("google")} style={social("#ffffff", "#1a1a2e", true)}>
+                Google로 계속하기
+              </button>
+            </div>
           </div>
         </div>
       </Screen>
@@ -222,3 +237,17 @@ const fieldStyle = {
   fontSize: 14,
   color: "var(--color-ink)",
 } as const;
+
+function social(bg: string, color: string, border = false) {
+  return {
+    width: "100%",
+    background: bg,
+    color,
+    border: border ? "1px solid var(--color-line)" : "none",
+    borderRadius: "var(--radius-pill)",
+    padding: "13px",
+    fontSize: 14,
+    fontWeight: 500,
+    cursor: "pointer",
+  } as const;
+}

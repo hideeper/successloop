@@ -8,7 +8,7 @@ import { Screen, PrimaryButton } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn } = useStore();
+  const { signIn, signInWithProvider } = useStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +25,11 @@ export default function LoginPage() {
     setLoading(false);
     if (ok) router.replace("/"); // 가드가 단계에 맞춰 알아서 이동시킴
     else setError("로그인에 실패했습니다. 이메일/비밀번호를 확인해주세요.");
+  }
+
+  function socialLogin(provider: "google" | "kakao") {
+    setError(null);
+    signInWithProvider(provider);
   }
 
   function socialComingSoon() {
@@ -122,10 +127,10 @@ export default function LoginPage() {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <button onClick={socialComingSoon} style={social("#fee500", "#3c1e1e")}>
+          <button onClick={() => socialLogin("kakao")} style={social("#fee500", "#3c1e1e")}>
             카카오로 계속하기
           </button>
-          <button onClick={socialComingSoon} style={social("#ffffff", "#1a1a2e", true)}>
+          <button onClick={() => socialLogin("google")} style={social("#ffffff", "#1a1a2e", true)}>
             Google로 계속하기
           </button>
           <button onClick={socialComingSoon} style={social("#1a1a2e", "#ffffff")}>
@@ -141,7 +146,7 @@ export default function LoginPage() {
             marginTop: 18,
           }}
         >
-          소셜 로그인은 준비 중입니다. 이메일로 회원가입해주세요.
+          Apple 로그인은 준비 중입니다.
         </p>
       </div>
     </Screen>

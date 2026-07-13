@@ -156,15 +156,16 @@ export async function saveDailyEntry(db: SupabaseClient, userId: string, entry: 
 export async function loadProfile(
   db: SupabaseClient,
   userId: string,
-): Promise<{ pinHash: string | null; stage1Done: boolean }> {
+): Promise<{ pinHash: string | null; stage1Done: boolean; termsAgreed: boolean }> {
   const { data } = await db
     .from("profiles")
-    .select("pin_hash, onboarding_step")
+    .select("pin_hash, onboarding_step, terms_agreed")
     .eq("user_id", userId)
     .maybeSingle();
   return {
     pinHash: (data?.pin_hash as string | null | undefined) ?? null,
     stage1Done: data?.onboarding_step === "completed",
+    termsAgreed: (data?.terms_agreed as boolean | undefined) ?? false,
   };
 }
 
@@ -174,6 +175,13 @@ export async function markStage1Complete(db: SupabaseClient, userId: string) {
 
 export async function savePinHash(db: SupabaseClient, userId: string, pinHash: string) {
   await db.from("profiles").update({ pin_hash: pinHash }).eq("user_id", userId);
+}
+
+export async function agreeToTerms(db: SupabaseClient, userId: string, marketingOptIn: boolean) {
+  await db
+    .from("profiles")
+    .update({ terms_agreed: true, marketing_opt_in: marketingOptIn })
+    .eq("user_id", userId);
 }
 
 const DEFAULT_REMINDER: ReminderSettings = {
