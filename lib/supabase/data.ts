@@ -176,18 +176,45 @@ export async function savePinHash(db: SupabaseClient, userId: string, pinHash: s
   await db.from("profiles").update({ pin_hash: pinHash }).eq("user_id", userId);
 }
 
-const DEFAULT_REMINDER: ReminderSettings = { morningAt: "07:00", nightAt: "22:00" };
+const DEFAULT_REMINDER: ReminderSettings = {
+  morningAt: "07:00",
+  nightAt: "22:00",
+  randomEnabled: false,
+  randomPerDay: 3,
+  randomWindowStart: "09:00",
+  randomWindowEnd: "21:00",
+  dndEnabled: true,
+  dndStart: "23:00",
+  dndEnd: "07:00",
+};
+
+// dnd_start/dnd_end에는 "끔" 상태를 표현하는 별도 컬럼이 없으므로,
+// 두 값이 같으면(00:00~00:00) 꺼짐으로 취급한다.
+const DND_OFF = "00:00";
 
 export async function loadReminderSettings(db: SupabaseClient, userId: string): Promise<ReminderSettings> {
   const { data } = await db
     .from("reminder_settings")
-    .select("morning_at, night_at")
+    .select(
+      "morning_at, night_at, random_enabled, random_per_day, random_window_start, random_window_end, dnd_start, dnd_end",
+    )
     .eq("user_id", userId)
     .maybeSingle();
   if (!data) return DEFAULT_REMINDER;
+
+  const dndStart = (data.dnd_start as string | null)?.slice(0, 5) ?? DEFAULT_REMINDER.dndStart;
+  const dndEnd = (data.dnd_end as string | null)?.slice(0, 5) ?? DEFAULT_REMINDER.dndEnd;
+
   return {
     morningAt: (data.morning_at as string | null)?.slice(0, 5) ?? null,
     nightAt: (data.night_at as string | null)?.slice(0, 5) ?? null,
+    randomEnabled: (data.random_enabled as boolean | null) ?? false,
+    randomPerDay: (data.random_per_day as number | null) ?? DEFAULT_REMINDER.randomPerDay,
+    randomWindowStart: (data.random_window_start as string | null)?.slice(0, 5) ?? DEFAULT_REMINDER.randomWindowStart,
+    randomWindowEnd: (data.random_window_end as string | null)?.slice(0, 5) ?? DEFAULT_REMINDER.randomWindowEnd,
+    dndEnabled: dndStart !== dndEnd,
+    dndStart,
+    dndEnd,
   };
 }
 
@@ -199,6 +226,22 @@ export async function saveReminderSettings(
   const row: Record<string, unknown> = { user_id: userId };
   if (patch.morningAt !== undefined) row.morning_at = patch.morningAt;
   if (patch.nightAt !== undefined) row.night_at = patch.nightAt;
+  if (patch.randomEnabled !== undefined) row.random_enabled = patch.randomEnabled;
+  if (patch.randomPerDay !== undefined) row.random_per_day = patch.randomPerDay;
+  if (patch.randomWindowStart !== undefined) row.random_window_start = patch.randomWindowStart;
+  if (patch.randomWindowEnd !== undefined) row.random_window_end = patch.randomWindowEnd;
+  if (patch.dndEnabled !== undefined) {
+    if (patch.dndEnabled) {
+      row.dnd_start = patch.dndStart ?? DEFAULT_REMINDER.dndStart;
+      row.dnd_end = patch.dndEnd ?? DEFAULT_REMINDER.dndEnd;
+    } else {
+      row.dnd_start = DND_OFF;
+      row.dnd_end = DND_OFF;
+    }
+  } else {
+    if (patch.dndStart !== undefined) row.dnd_start = patch.dndStart;
+    if (patch.dndEnd !== undefined) row.dnd_end = patch.dndEnd;
+  }
   await db.from("reminder_settings").upsert(row, { onConflict: "user_id" });
 }
 

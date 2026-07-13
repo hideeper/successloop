@@ -28,7 +28,17 @@ import {
 import { hashPin } from "./pin";
 import type { AuthUser, RoadmapData, DailyEntry, ReminderSettings } from "./types";
 
-const defaultReminder: ReminderSettings = { morningAt: "07:00", nightAt: "22:00" };
+const defaultReminder: ReminderSettings = {
+  morningAt: "07:00",
+  nightAt: "22:00",
+  randomEnabled: false,
+  randomPerDay: 3,
+  randomWindowStart: "09:00",
+  randomWindowEnd: "21:00",
+  dndEnabled: true,
+  dndStart: "23:00",
+  dndEnd: "07:00",
+};
 
 const emptyRoadmap: RoadmapData = {
   dislikes: [],

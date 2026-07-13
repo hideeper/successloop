@@ -21,7 +21,16 @@ export default function NotificationTimesPage() {
     setDraft(reminderSettings);
   }, [reminderSettings]);
 
-  const dirty = draft.morningAt !== reminderSettings.morningAt || draft.nightAt !== reminderSettings.nightAt;
+  const dirty =
+    draft.morningAt !== reminderSettings.morningAt ||
+    draft.nightAt !== reminderSettings.nightAt ||
+    draft.randomEnabled !== reminderSettings.randomEnabled ||
+    draft.randomPerDay !== reminderSettings.randomPerDay ||
+    draft.randomWindowStart !== reminderSettings.randomWindowStart ||
+    draft.randomWindowEnd !== reminderSettings.randomWindowEnd ||
+    draft.dndEnabled !== reminderSettings.dndEnabled ||
+    draft.dndStart !== reminderSettings.dndStart ||
+    draft.dndEnd !== reminderSettings.dndEnd;
 
   async function apply() {
     setSaving(true);
@@ -57,6 +66,71 @@ export default function NotificationTimesPage() {
           defaultTime="22:00"
           onChange={(v) => {
             setDraft((s) => ({ ...s, nightAt: v }));
+            setSaved(false);
+          }}
+        />
+
+        <p style={{ fontSize: 12, color: "var(--color-ink-muted)", margin: "18px 4px 10px", lineHeight: 1.5 }}>
+          지정한 시간 범위 안에서 예측할 수 없는 시각에 목표를 떠올리게 해요.
+        </p>
+        <RangeRow
+          icon="🎲"
+          label="랜덤 알림"
+          enabled={draft.randomEnabled}
+          start={draft.randomWindowStart}
+          end={draft.randomWindowEnd}
+          onToggle={() => {
+            setDraft((s) => ({ ...s, randomEnabled: !s.randomEnabled }));
+            setSaved(false);
+          }}
+          onChangeStart={(v) => {
+            setDraft((s) => ({ ...s, randomWindowStart: v }));
+            setSaved(false);
+          }}
+          onChangeEnd={(v) => {
+            setDraft((s) => ({ ...s, randomWindowEnd: v }));
+            setSaved(false);
+          }}
+          extra={
+            <>
+              <span style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>하루</span>
+              <select
+                value={draft.randomPerDay}
+                onChange={(e) => {
+                  setDraft((s) => ({ ...s, randomPerDay: Number(e.target.value) }));
+                  setSaved(false);
+                }}
+                style={timeInputStyle}
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n}회
+                  </option>
+                ))}
+              </select>
+            </>
+          }
+        />
+
+        <p style={{ fontSize: 12, color: "var(--color-ink-muted)", margin: "18px 4px 10px", lineHeight: 1.5 }}>
+          이 시간대에는 어떤 알림도 보내지 않아요. (자정을 넘겨도 괜찮아요)
+        </p>
+        <RangeRow
+          icon="🌚"
+          label="방해금지 시간"
+          enabled={draft.dndEnabled}
+          start={draft.dndStart}
+          end={draft.dndEnd}
+          onToggle={() => {
+            setDraft((s) => ({ ...s, dndEnabled: !s.dndEnabled }));
+            setSaved(false);
+          }}
+          onChangeStart={(v) => {
+            setDraft((s) => ({ ...s, dndStart: v }));
+            setSaved(false);
+          }}
+          onChangeEnd={(v) => {
+            setDraft((s) => ({ ...s, dndEnd: v }));
             setSaved(false);
           }}
         />
@@ -156,3 +230,95 @@ function TimeRow({
     </div>
   );
 }
+
+function RangeRow({
+  icon,
+  label,
+  enabled,
+  start,
+  end,
+  onToggle,
+  onChangeStart,
+  onChangeEnd,
+  extra,
+}: {
+  icon: string;
+  label: string;
+  enabled: boolean;
+  start: string;
+  end: string;
+  onToggle: () => void;
+  onChangeStart: (v: string) => void;
+  onChangeEnd: (v: string) => void;
+  extra?: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        background: "var(--color-surface)",
+        borderRadius: 16,
+        padding: 14,
+        boxShadow: "0 4px 14px rgba(60,70,110,0.07)",
+        marginBottom: 10,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ fontSize: 20 }}>{icon}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 500 }}>{label}</div>
+          {!enabled && <div style={{ fontSize: 12, color: "var(--color-ink-muted)", marginTop: 2 }}>꺼짐</div>}
+        </div>
+        <button
+          onClick={onToggle}
+          style={{
+            width: 42,
+            height: 24,
+            borderRadius: 14,
+            border: "none",
+            background: enabled ? "var(--color-brand)" : "#d6dbe4",
+            position: "relative",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+          aria-label={`${label} 켜기/끄기`}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: 3,
+              left: enabled ? 21 : 3,
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: "#fff",
+              transition: "left 0.15s",
+            }}
+          />
+        </button>
+      </div>
+
+      {enabled && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, paddingLeft: 32 }}>
+          <input
+            type="time"
+            value={start}
+            onChange={(e) => onChangeStart(e.target.value)}
+            style={timeInputStyle}
+          />
+          <span style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>~</span>
+          <input type="time" value={end} onChange={(e) => onChangeEnd(e.target.value)} style={timeInputStyle} />
+          {extra}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const timeInputStyle = {
+  border: "none",
+  background: "var(--color-field)",
+  borderRadius: 8,
+  padding: "4px 8px",
+  fontSize: 13,
+  color: "var(--color-ink)",
+} as const;
