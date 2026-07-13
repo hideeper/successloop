@@ -50,7 +50,7 @@ export default function ConsentPage() {
     setLoading(true);
     await agreeToTerms(marketingOptIn);
     setLoading(false);
-    router.replace("/onboarding");
+    router.replace("/"); // 다음 단계는 루트 가드가 stage1/PIN 상태를 보고 결정한다
   }
 
   async function cancel() {
