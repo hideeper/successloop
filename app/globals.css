@@ -20,6 +20,22 @@
   --radius-pill: 24px;
 }
 
+html[data-theme="dark"] {
+  --color-brand: #a78bfa;
+  --color-brand-soft: #3f3355;
+  --color-brand-border: #574a7a;
+  --color-brand-text: #d8c8fb;
+
+  --color-page: #16151f;
+  --color-surface: #211f2d;
+  --color-field: #2a2838;
+
+  --color-ink: #f2f0f8;
+  --color-ink-soft: #b6b0c7;
+  --color-ink-muted: #837d99;
+  --color-line: #35334a;
+}
+
 html,
 body {
   padding: 0;

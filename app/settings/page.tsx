@@ -5,12 +5,17 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore } from "@/lib/store";
 import { useAppGuard } from "@/lib/useAppGuard";
+import { useTheme } from "@/lib/theme";
 import { Screen, BottomNav } from "@/components/ui";
 import { getNotificationPermission, sendTestPush, subscribeToPush } from "@/lib/pushClient";
+import { createClient } from "@/lib/supabase/client";
+import { buildExportCsv, downloadCsv } from "@/lib/export";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, logout } = useStore();
+  const { user, logout, userId, roadmap } = useStore();
+  const { theme, toggle: toggleTheme } = useTheme();
+  const [exporting, setExporting] = useState(false);
   useAppGuard();
 
   async function doLogout() {
@@ -22,6 +27,18 @@ export default function SettingsPage() {
     if (confirm("정말 탈퇴하시겠어요? 모든 데이터가 삭제됩니다.")) {
       await logout();
       router.replace("/login");
+    }
+  }
+
+  async function handleExport() {
+    if (!userId || exporting) return;
+    setExporting(true);
+    try {
+      const supabase = createClient();
+      const csv = await buildExportCsv(supabase, userId, roadmap);
+      downloadCsv(`successloop_${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -70,8 +87,12 @@ export default function SettingsPage() {
         <NotificationCard />
 
         <Card>
-          <Row label="다크 모드" soon />
-          <Row label="데이터 내보내기 (CSV·Excel)" soon />
+          <ToggleRow label="다크 모드" checked={theme === "dark"} onToggle={toggleTheme} />
+          <Row
+            label={exporting ? "내보내는 중…" : "데이터 내보내기 (CSV·Excel)"}
+            onClick={handleExport}
+            disabled={exporting}
+          />
           <Row label="문의하기" href="/settings/inquiry" />
           <Row label="이용약관 · 개인정보 처리방침" soon last />
         </Card>
@@ -206,28 +227,87 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Row({ label, href, soon = false, last = false }: { label: string; href?: string; soon?: boolean; last?: boolean }) {
+function Row({
+  label,
+  href,
+  onClick,
+  soon = false,
+  disabled = false,
+  last = false,
+}: {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  soon?: boolean;
+  disabled?: boolean;
+  last?: boolean;
+}) {
   const router = useRouter();
+  const clickable = !soon && !disabled && (href || onClick);
   return (
     <div
-      onClick={() => href && !soon && router.push(href)}
+      onClick={() => {
+        if (!clickable) return;
+        if (onClick) onClick();
+        else if (href) router.push(href);
+      }}
       style={{
         display: "flex",
         alignItems: "center",
         gap: 12,
         padding: "13px 0",
         borderBottom: last ? "none" : "1px solid #f1f3f7",
-        cursor: soon ? "default" : "pointer",
+        cursor: clickable ? "pointer" : "default",
       }}
     >
-      <span style={{ flex: 1, fontSize: 14, color: soon ? "var(--color-ink-muted)" : "var(--color-ink)" }}>{label}</span>
+      <span style={{ flex: 1, fontSize: 14, color: soon || disabled ? "var(--color-ink-muted)" : "var(--color-ink)" }}>
+        {label}
+      </span>
       {soon ? (
         <span style={{ fontSize: 11, color: "var(--color-ink-muted)", background: "var(--color-field)", borderRadius: 12, padding: "3px 9px" }}>
           준비 중
         </span>
-      ) : (
+      ) : !disabled ? (
         <span style={{ color: "#c3cad6", fontSize: 18 }}>›</span>
-      )}
+      ) : null}
+    </div>
+  );
+}
+
+function ToggleRow({ label, checked, onToggle }: { label: string; checked: boolean; onToggle: () => void }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 0", borderBottom: "1px solid #f1f3f7" }}>
+      <span style={{ flex: 1, fontSize: 14, color: "var(--color-ink)" }}>{label}</span>
+      <button
+        onClick={onToggle}
+        aria-pressed={checked}
+        style={{
+          width: 44,
+          height: 26,
+          borderRadius: 13,
+          border: "none",
+          background: checked ? "var(--color-brand)" : "var(--color-line)",
+          position: "relative",
+          cursor: "pointer",
+          flexShrink: 0,
+          padding: 0,
+          transition: "background 0.15s",
+        }}
+      >
+        <span
+          style={{
+            position: "absolute",
+            top: 3,
+            left: checked ? 21 : 3,
+            width: 20,
+            height: 20,
+            borderRadius: "50%",
+            background: "#fff",
+            transition: "left 0.15s",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          }}
+        />
+      </button>
     </div>
   );
 }
