@@ -11,5 +11,11 @@ jobs:
     steps:
       - name: Call reminder API
         run: |
-          curl -sf -X GET "https://success-system.vercel.app/api/cron/send-reminders" \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+          status=$(curl -sS -o response.txt -w "%{http_code}" -X GET "https://success-system.vercel.app/api/cron/send-reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+          echo "HTTP status: $status"
+          echo "Response body:"
+          cat response.txt
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            exit 1
+          fi
