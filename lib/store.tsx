@@ -141,6 +141,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setCompletedDates(dates);
       setReminderSettingsState(reminder);
       setDataLoading(false);
+      // 활동 시각 기록 (관리자 대시보드 활성 사용자 집계용, 실패해도 무시)
+      supabase.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("user_id", userId);
     })();
     return () => {
       active = false;
