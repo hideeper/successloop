@@ -123,7 +123,9 @@ export default function LoginPage() {
             회원가입
           </Link>
           <span style={{ color: "var(--color-line)" }}>|</span>
-          <span>비밀번호 찾기</span>
+          <Link href="/reset-password/request" style={{ color: "var(--color-ink-soft)", textDecoration: "none" }}>
+            비밀번호 찾기
+          </Link>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

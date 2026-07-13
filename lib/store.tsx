@@ -72,6 +72,8 @@ interface Store {
   signUp: (email: string, password: string, marketingOptIn: boolean) => Promise<boolean>;
   signIn: (email: string, password: string) => Promise<boolean>;
   signInWithProvider: (provider: "google" | "kakao") => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<boolean>;
+  updatePassword: (newPassword: string) => Promise<boolean>;
   agreeToTerms: (marketingOptIn: boolean) => Promise<void>;
   logout: () => Promise<void>;
   setRoadmap: (patch: Partial<RoadmapData>) => Promise<void>;
@@ -205,6 +207,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (error) setAuthError(error.message);
   }
 
+  async function requestPasswordReset(email: string) {
+    setAuthError(null);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password/confirm`,
+    });
+    if (error) {
+      setAuthError(error.message);
+      return false;
+    }
+    return true;
+  }
+
+  async function updatePassword(newPassword: string) {
+    setAuthError(null);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      setAuthError(error.message);
+      return false;
+    }
+    return true;
+  }
+
   // 소셜 로그인은 별도 동의 화면이 없으므로, 최초 로그인 시 /consent에서 한 번 동의를 받는다.
   async function agreeToTerms(marketingOptIn: boolean) {
     if (!userId) return;
@@ -292,6 +316,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     signUp,
     signIn,
     signInWithProvider,
+    requestPasswordReset,
+    updatePassword,
     agreeToTerms,
     logout,
     setRoadmap,

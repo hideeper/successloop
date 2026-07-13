@@ -16,6 +16,7 @@ export default function SettingsPage() {
   const { user, logout, userId, roadmap } = useStore();
   const { theme, toggle: toggleTheme } = useTheme();
   const [exporting, setExporting] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
   useAppGuard();
 
   async function doLogout() {
@@ -24,9 +25,15 @@ export default function SettingsPage() {
   }
 
   async function withdraw() {
-    if (confirm("정말 탈퇴하시겠어요? 모든 데이터가 삭제됩니다.")) {
+    if (!confirm("정말 탈퇴하시겠어요? 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.")) return;
+    setWithdrawing(true);
+    const res = await fetch("/api/account/delete", { method: "POST" });
+    if (res.ok) {
       await logout();
       router.replace("/login");
+    } else {
+      setWithdrawing(false);
+      alert("탈퇴 처리 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.");
     }
   }
 
@@ -101,8 +108,8 @@ export default function SettingsPage() {
           <button onClick={doLogout} style={textButton("var(--color-ink-soft)")}>
             로그아웃
           </button>
-          <button onClick={withdraw} style={textButton("#d14343")}>
-            회원 탈퇴
+          <button onClick={withdraw} disabled={withdrawing} style={textButton("#d14343")}>
+            {withdrawing ? "탈퇴 처리 중…" : "회원 탈퇴"}
           </button>
         </div>
       </div>
