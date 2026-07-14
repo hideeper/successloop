@@ -35,7 +35,8 @@ jobs:
       - name: Archive source code
         run: |
           tar --exclude=node_modules --exclude=.next --exclude=.git \
-            -czf source-backup.tar.gz .
+            -czf /tmp/source-backup.tar.gz .
+          mv /tmp/source-backup.tar.gz source-backup.tar.gz
 
       - name: Upload database backup
         uses: actions/upload-artifact@v4
