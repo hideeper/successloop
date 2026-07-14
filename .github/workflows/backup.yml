@@ -1,0 +1,53 @@
+name: Daily Backup
+
+on:
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install postgresql-client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Dump database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pg_dump "$DATABASE_URL" -Fc -f db-backup.dump
+
+      - name: Encrypt database dump
+        env:
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: |
+          openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -in db-backup.dump -out db-backup.dump.enc \
+            -pass pass:"$BACKUP_ENCRYPTION_KEY"
+          rm db-backup.dump
+
+      - name: Archive source code
+        run: |
+          tar --exclude=node_modules --exclude=.next --exclude=.git \
+            -czf source-backup.tar.gz .
+
+      - name: Upload database backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: db-backup.dump.enc
+          retention-days: 14
+
+      - name: Upload source backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-backup-${{ github.run_id }}
+          path: source-backup.tar.gz
+          retention-days: 14
+
+# 복원 방법:
+# 1. GitHub Actions 실행 결과 페이지에서 db-backup-*.zip 아티팩트 다운로드 후 압축 해제
+# 2. 복호화: openssl enc -d -aes-256-cbc -pbkdf2 -in db-backup.dump.enc -out db-backup.dump -pass pass:"$BACKUP_ENCRYPTION_KEY"
+# 3. 복원: pg_restore --clean --if-exists -d "$DATABASE_URL" db-backup.dump
