@@ -69,7 +69,7 @@ export default function PinLockPage() {
         <PinPad value={value} onChange={setValue} onComplete={complete} />
 
         <Link
-          href="/pin/setup"
+          href="/pin/recover"
           style={{ marginTop: 18, fontSize: 13, color: "var(--color-brand)", fontWeight: 500, textDecoration: "none" }}
         >
           PIN을 잊으셨나요?

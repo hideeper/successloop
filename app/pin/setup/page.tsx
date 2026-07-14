@@ -8,14 +8,17 @@ import { PinDots, PinPad } from "@/components/PinPad";
 
 export default function PinSetupPage() {
   const router = useRouter();
-  const { hydrated, user, stage1Done, setPin, unlock } = useStore();
+  const { hydrated, user, stage1Done, hasPin, unlocked, setPin, unlock } = useStore();
   const [value, setValue] = useState("");
 
+  // 이미 PIN이 있는데 아직 잠금을 풀지 않은 상태로 이 URL에 직접 들어온 경우
+  // (예: 기기를 주운 사람) 본인 확인 없이 PIN을 새로 설정하지 못하도록 막는다.
   useEffect(() => {
     if (!hydrated) return;
     if (!user) router.replace("/login");
     else if (!stage1Done) router.replace("/onboarding");
-  }, [hydrated, user, stage1Done, router]);
+    else if (hasPin && !unlocked) router.replace("/pin/recover");
+  }, [hydrated, user, stage1Done, hasPin, unlocked, router]);
 
   async function complete(pin: string) {
     await setPin(pin);
