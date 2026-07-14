@@ -157,26 +157,36 @@ function NotificationCard() {
         marginBottom: 14,
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: message ? 10 : 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <span style={{ flex: 1, fontSize: 14, color: "var(--color-ink)" }}>알림 설정</span>
-        {permission === "unsupported" ? (
-          <span style={{ fontSize: 12, color: "var(--color-ink-muted)" }}>미지원 브라우저</span>
-        ) : enabled ? (
-          <div style={{ display: "flex", gap: 8 }}>
-            <Link
-              href="/settings/notifications"
-              style={{
-                fontSize: 12,
-                fontWeight: 500,
-                color: "var(--color-ink-soft)",
-                border: "1px solid var(--color-line)",
-                borderRadius: 14,
-                padding: "5px 12px",
-                textDecoration: "none",
-              }}
-            >
-              시간 설정
-            </Link>
+        <Link
+          href="/settings/notifications"
+          style={{
+            fontSize: 12,
+            fontWeight: 500,
+            color: "var(--color-ink-soft)",
+            border: "1px solid var(--color-line)",
+            borderRadius: 14,
+            padding: "5px 12px",
+            textDecoration: "none",
+          }}
+        >
+          시간 설정
+        </Link>
+      </div>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
+        <span style={{ flex: 1, fontSize: 12, color: "var(--color-ink-muted)" }}>
+          {permission === "unsupported"
+            ? "이 브라우저는 알림을 지원하지 않아요."
+            : enabled
+              ? "알림이 켜져 있어요."
+              : permission === "denied"
+                ? "브라우저 알림 권한이 차단돼 있어요. 시간 설정은 저장되지만, 실제 알림은 오지 않아요."
+                : "알림을 받으려면 권한을 켜주세요. 시간 설정은 지금도 미리 해둘 수 있어요."}
+        </span>
+        {permission !== "unsupported" &&
+          (enabled ? (
             <button
               onClick={handleTest}
               disabled={loading}
@@ -193,27 +203,27 @@ function NotificationCard() {
             >
               테스트 발송
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleEnable}
-            disabled={loading || permission === "denied"}
-            style={{
-              fontSize: 12,
-              fontWeight: 500,
-              color: "#fff",
-              border: "none",
-              borderRadius: 14,
-              padding: "6px 14px",
-              background: permission === "denied" ? "#c3cad6" : "var(--color-brand)",
-              cursor: permission === "denied" ? "default" : "pointer",
-            }}
-          >
-            {permission === "denied" ? "권한 차단됨" : "알림 켜기"}
-          </button>
-        )}
+          ) : (
+            <button
+              onClick={handleEnable}
+              disabled={loading || permission === "denied"}
+              style={{
+                fontSize: 12,
+                fontWeight: 500,
+                color: "#fff",
+                border: "none",
+                borderRadius: 14,
+                padding: "6px 14px",
+                background: permission === "denied" ? "#c3cad6" : "var(--color-brand)",
+                cursor: permission === "denied" ? "default" : "pointer",
+                flexShrink: 0,
+              }}
+            >
+              {permission === "denied" ? "권한 차단됨" : "알림 켜기"}
+            </button>
+          ))}
       </div>
-      {message && <div style={{ fontSize: 12, color: "var(--color-ink-muted)", lineHeight: 1.5 }}>{message}</div>}
+      {message && <div style={{ fontSize: 12, color: "var(--color-ink-muted)", lineHeight: 1.5, marginTop: 8 }}>{message}</div>}
     </div>
   );
 }
