@@ -42,6 +42,8 @@ export default function GoalsPage() {
 
         <CompassSection value={roadmap.compass} onSave={(v) => setRoadmap({ compass: v })} />
 
+        <LockedCategories />
+
         <NewVersionButton
           onConfirm={async () => {
             await startNewRoadmap();
@@ -218,6 +220,41 @@ function CompassSection({ value, onSave }: { value: string; onSave: (v: string) 
           resize: "vertical",
         }}
       />
+    </div>
+  );
+}
+
+const LOCKED_CATEGORIES = [
+  { icon: "👁️", title: "시각화", sub: "미래의 성공한 나를 심상화" },
+  { icon: "🧭", title: "셀프 포지셔닝", sub: "슈퍼 셀프 이미지·정체성" },
+];
+
+function LockedCategories() {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 13, fontWeight: 500, margin: "0 4px 9px" }}>추가 서비스 (준비 중)</div>
+      <div style={{ display: "flex", gap: 10 }}>
+        {LOCKED_CATEGORIES.map((c) => (
+          <div
+            key={c.title}
+            style={{
+              flex: 1,
+              background: "var(--color-brand-soft)",
+              border: "1px solid var(--color-brand-border)",
+              borderRadius: 16,
+              padding: 14,
+              textAlign: "center",
+              opacity: 0.75,
+            }}
+          >
+            <div style={{ fontSize: 22, marginBottom: 6 }}>{c.icon}</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--color-brand-text)" }}>
+              🔒 {c.title}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--color-brand-text)", marginTop: 2 }}>{c.sub}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
