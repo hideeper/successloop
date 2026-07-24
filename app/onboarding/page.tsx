@@ -8,7 +8,7 @@ import { Screen, PrimaryButton, PhotoBox } from "@/components/ui";
 type ListField = "dislikes" | "likes" | "realizations";
 
 type Step =
-  | { kind: "card"; title: string; body: string[]; photo: string; cta: string }
+  | { kind: "card"; title: string; body: string[]; photo: string; photoSrc: string; cta: string }
   | {
       kind: "list";
       field: ListField;
@@ -23,6 +23,7 @@ const steps: Step[] = [
   {
     kind: "card",
     photo: "노트에 적는 손",
+    photoSrc: "/onboarding/step1-notebook.png",
     title: "성공하는 방법은\n아주 간단합니다",
     body: [
       "목표를 적으세요. 목표를 적으면 그대로 실현됩니다.",
@@ -34,6 +35,7 @@ const steps: Step[] = [
   {
     kind: "card",
     photo: "THIS FEELS SO REAL",
+    photoSrc: "/onboarding/step2-magnifier.png",
     title: "진짜 목표는\n길이 자연스럽게 열립니다",
     body: [
       "진짜 목표는 이루는 과정이 자연스럽게 흘러가지만, 가짜 목표는 자꾸 막힙니다. 중요한 건 내가 정말 하고 싶은 일을 정의하는 것이 먼저입니다.",
@@ -43,6 +45,7 @@ const steps: Step[] = [
   {
     kind: "card",
     photo: "OUT",
+    photoSrc: "/onboarding/step3-noentry.png",
     title: "하고 싶은 일은\n하기 싫은 일에서 보입니다",
     body: [
       "역설적이지만, 하기 싫은 일을 솔직하게 적다 보면 진짜 원하는 게 또렷해집니다. 한계나 제약 없이 떠오르는 그대로 적어보세요.",
@@ -65,6 +68,7 @@ const steps: Step[] = [
   {
     kind: "card",
     photo: "노을 들판의 아이",
+    photoSrc: "/onboarding/step4-myway.png",
     title: "지금은 '내가'\n하고 싶은 일에 집중",
     body: [
       "하기 싫은 일에도 해야 할 일이 있고, 둘이 충돌할 수도 있습니다. 그래도 지금은 정말 '내가' 하고 싶은 일을 또렷하게 하는 데 집중하세요.",
@@ -88,6 +92,7 @@ const steps: Step[] = [
   {
     kind: "card",
     photo: "별밤 아래 나침반",
+    photoSrc: "/onboarding/step5-compass.png",
     title: "방향성은\n인생의 나침반이 됩니다",
     body: [
       "싫음과 좋음을 정리하면 내 삶의 방향이 보입니다. 그 방향을 분명히 하면, 잠재의식을 깨워 내 길로 인도하는 나침반이 됩니다.",
@@ -107,6 +112,7 @@ const steps: Step[] = [
   {
     kind: "card",
     photo: "빛의 터널 끝 실루엣",
+    photoSrc: "/onboarding/step6-window.png",
     title: "뇌는 스스로\n답을 찾습니다",
     body: [
       "목표를 명확히 정의하면, 망상활성계가 의식하지 못할 때도 정보를 모으고 답을 찾습니다. 목표는 많을수록 좋습니다.",
@@ -215,7 +221,7 @@ export default function OnboardingPage() {
               flexDirection: "column",
             }}
           >
-            <PhotoBox label={step.photo} height={200} />
+            <PhotoBox label={step.photo} src={step.photoSrc} height={200} />
             <div style={{ padding: "20px 18px", display: "flex", flexDirection: "column", flex: 1 }}>
               <h1 style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.4, margin: 0, whiteSpace: "pre-line" }}>
                 {step.title}

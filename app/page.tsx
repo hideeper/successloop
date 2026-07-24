@@ -64,7 +64,7 @@ function Landing() {
           <div style={{ fontSize: 15, fontWeight: 500, color: "var(--color-brand-text)" }}>SuccessLoop</div>
         </div>
 
-        <PhotoBox label="빛의 터널 끝 실루엣" height={200} radius={18} />
+        <PhotoBox label="빛의 터널 끝 실루엣" src="/onboarding/step6-window.png" height={200} radius={18} />
 
         <h1
           style={{

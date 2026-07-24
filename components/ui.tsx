@@ -63,13 +63,31 @@ export function PrimaryButton({
 
 export function PhotoBox({
   label,
+  src,
   height = 200,
   radius = 0,
 }: {
   label: string;
+  src?: string;
   height?: number;
   radius?: number;
 }) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={label}
+        style={{
+          width: "100%",
+          height,
+          borderRadius: radius,
+          objectFit: "cover",
+          display: "block",
+        }}
+      />
+    );
+  }
+
   return (
     <div
       style={{
